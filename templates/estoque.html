@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Estoque - Sistema SAEP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Gestão de Estoque</h1>
+            <div class="user-info">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Voltar ao Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a>
+            </div>
+        </header>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <main class="main-content">
+            <!-- Formulário de movimentação -->
+            <div class="card">
+                <h2>Registrar Movimentação</h2>
+                <form method="POST" action="{{ url_for('movimentar_estoque') }}" class="estoque-form">
+                    <div class="form-group">
+                        <label for="produto_id">Produto *</label>
+                        <select id="produto_id" name="produto_id" required>
+                            <option value="">Selecione um produto</option>
+                            {% for produto in produtos %}
+                            <option value="{{ produto.id }}">{{ produto.nome }} (Estoque atual: {{ produto.quantidade }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tipo_movimentacao">Tipo de Movimentação *</label>
+                        <select id="tipo_movimentacao" name="tipo_movimentacao" required>
+                            <option value="">Selecione o tipo</option>
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quantidade">Quantidade *</label>
+                        <input type="number" id="quantidade" name="quantidade" min="1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="data_movimentacao">Data da Movimentação *</label>
+                        <input type="date" id="data_movimentacao" name="data_movimentacao" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">Registrar Movimentação</button>
+                </form>
+            </div>
+            
+            <!-- Tabela de produtos (ordenada alfabeticamente) -->
+            <div class="table-container">
+                <h2>Produtos em Estoque (Ordem Alfabética)</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Quantidade Atual</th>
+                            <th>Estoque Mínimo</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in produtos %}
+                        <tr class="{% if produto.quantidade < produto.estoque_minimo %}low-stock{% endif %}">
+                            <td>{{ produto.nome }}</td>
+                            <td>{{ produto.descricao }}</td>
+                            <td>{{ produto.quantidade }}</td>
+                            <td>{{ produto.estoque_minimo }}</td>
+                            <td>
+                                {% if produto.quantidade < produto.estoque_minimo %}
+                                    <span class="badge badge-danger">Abaixo do Mínimo</span>
+                                {% elif produto.quantidade == produto.estoque_minimo %}
+                                    <span class="badge badge-warning">No Mínimo</span>
+                                {% else %}
+                                    <span class="badge badge-success">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Nenhum produto cadastrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Definir data atual como padrão
+        document.getElementById('data_movimentacao').valueAsDate = new Date();
+    </script>
+</body>
+</html>
