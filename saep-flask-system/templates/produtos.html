@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produtos - Sistema SAEP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Cadastro de Produtos</h1>
+            <div class="user-info">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Voltar ao Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a>
+            </div>
+        </header>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <main class="main-content">
+            
+            <div class="search-section">
+                <form method="GET" action="{{ url_for('produtos') }}" class="search-form">
+                    <input type="text" name="search" placeholder="Buscar produto..." value="{{ search }}">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                    {% if search %}
+                        <a href="{{ url_for('produtos') }}" class="btn btn-secondary">Limpar</a>
+                    {% endif %}
+                </form>
+            </div>
+            
+            
+            <div class="action-section">
+                <button onclick="openModal('addModal')" class="btn btn-success">Adicionar Novo Produto</button>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Preço</th>
+                            <th>Quantidade</th>
+                            <th>Estoque Mínimo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in produtos %}
+                        <tr>
+                            <td>{{ produto.id }}</td>
+                            <td>{{ produto.nome }}</td>
+                            <td>{{ produto.descricao }}</td>
+                            <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
+                            <td>{{ produto.quantidade }}</td>
+                            <td>{{ produto.estoque_minimo }}</td>
+                            <td>
+                                <button onclick="openEditModal({{ produto.id }}, '{{ produto.nome }}', '{{ produto.descricao }}', {{ produto.preco }}, {{ produto.quantidade }}, {{ produto.estoque_minimo }})" class="btn btn-small btn-primary">Editar</button>
+                                <a href="{{ url_for('excluir_produto', id=produto.id) }}" onclick="return confirm('Tem certeza que deseja excluir este produto?')" class="btn btn-small btn-danger">Excluir</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Nenhum produto encontrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal Adicionar Produto -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addModal')">&times;</span>
+            <h2>Adicionar Novo Produto</h2>
+            <form method="POST" action="{{ url_for('adicionar_produto') }}">
+                <div class="form-group">
+                    <label for="nome">Nome *</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="descricao">Descrição</label>
+                    <textarea id="descricao" name="descricao" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="preco">Preço *</label>
+                    <input type="number" id="preco" name="preco" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantidade">Quantidade *</label>
+                    <input type="number" id="quantidade" name="quantidade" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="estoque_minimo">Estoque Mínimo *</label>
+                    <input type="number" id="estoque_minimo" name="estoque_minimo" min="0" required>
+                </div>
+                <button type="submit" class="btn btn-success">Adicionar</button>
+                <button type="button" onclick="closeModal('addModal')" class="btn btn-secondary">Cancelar</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Editar Produto -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+            <h2>Editar Produto</h2>
+            <form id="editForm" method="POST">
+                <div class="form-group">
+                    <label for="edit_nome">Nome *</label>
+                    <input type="text" id="edit_nome" name="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_descricao">Descrição</label>
+                    <textarea id="edit_descricao" name="descricao" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_preco">Preço *</label>
+                    <input type="number" id="edit_preco" name="preco" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_quantidade">Quantidade *</label>
+                    <input type="number" id="edit_quantidade" name="quantidade" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_estoque_minimo">Estoque Mínimo *</label>
+                    <input type="number" id="edit_estoque_minimo" name="estoque_minimo" min="0" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="button" onclick="closeModal('editModal')" class="btn btn-secondary">Cancelar</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function openEditModal(id, nome, descricao, preco, quantidade, estoque_minimo) {
+            document.getElementById('editForm').action = '/produtos/editar/' + id;
+            document.getElementById('edit_nome').value = nome;
+            document.getElementById('edit_descricao').value = descricao;
+            document.getElementById('edit_preco').value = preco;
+            document.getElementById('edit_quantidade').value = quantidade;
+            document.getElementById('edit_estoque_minimo').value = estoque_minimo;
+            openModal('editModal');
+        }
+        
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
