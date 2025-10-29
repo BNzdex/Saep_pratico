@@ -1,6 +1,6 @@
 import sqlite3
 
-DATABASE = 'saep_db.db'
+DATABASE = 'saep.db'
 
 def init_database():
     conn = sqlite3.connect(DATABASE)
